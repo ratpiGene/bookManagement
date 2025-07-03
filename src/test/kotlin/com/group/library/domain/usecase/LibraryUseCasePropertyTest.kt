@@ -16,6 +16,13 @@ class InMemoryBookRepositoryPort : BookRepositoryPort {
     override fun addBook(book: Book) {
         books.add(book)
     }
+    override fun updateReservation(title: String, author: String, reserved: Boolean) {
+        val index = books.indexOfFirst { it.title == title && it.author == author }
+        if (index != -1) {
+            val book = books[index]
+            books[index] = book.copy(reserved = reserved)
+        }
+    }
 
     fun clear() {
         books.clear()

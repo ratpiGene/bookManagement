@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.server.ResponseStatusException
+
 
 @RestController
 @RequestMapping("/books")
@@ -31,4 +33,16 @@ class LibraryController(
         libraryUseCase.addBook(bookDTO.toDomain())
     }
 
+    @CrossOrigin
+    @PostMapping("/reserve")
+    fun reserveBook(@RequestBody bookDTO: BookDTO): String {
+        return try {
+            libraryUseCase.reserveBook(bookDTO.title, bookDTO.author)
+            "Book reserved successfully."
+        } catch (e: IllegalArgumentException) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, e.message)
+        } catch (e: IllegalStateException) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, e.message)
+        }
+    }
 }

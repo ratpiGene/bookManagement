@@ -14,16 +14,35 @@ class BookDAO(private val namedParameterJdbcTemplate: NamedParameterJdbcTemplate
             .query("SELECT * FROM BOOK", MapSqlParameterSource()) { rs, _ ->
                 Book(
                     title = rs.getString("title"),
-                    author = rs.getString("author")
+                    author = rs.getString("author"),
+                    reserved = rs.getBoolean("reserved")
                 )
             }
     }
 
     override fun addBook(book: Book) {
         namedParameterJdbcTemplate
-            .update("INSERT INTO BOOK (title, author) values (:title, :author)", mapOf(
+            .update("INSERT INTO BOOK (title, author, reserved) values (:title, :author, :reserved)", mapOf(
                 "title" to book.title,
-                "author" to book.author
+                "author" to book.author,
+                "reserved" to book.reserved
             ))
+    }
+
+    override fun updateReservation(title: String, author: String, reserved: Boolean) {
+        val params = mapOf(
+            "title" to title,
+            "author" to author,
+            "reserved" to reserved
+        )
+
+        namedParameterJdbcTemplate.update(
+            """
+        UPDATE BOOK 
+        SET reserved = :reserved 
+        WHERE title = :title AND author = :author
+        """.trimIndent(),
+            params
+        )
     }
 }
