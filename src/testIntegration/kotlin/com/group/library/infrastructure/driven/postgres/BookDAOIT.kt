@@ -74,6 +74,25 @@ class BookDAOIT(
             }
         }
 
+        "updateReservation updates reserved status in db" {
+            // GIVEN
+            performQuery("""
+        INSERT INTO book (title, author, reserved) VALUES ('Test Book', 'Test Author', false)
+    """)
+
+            // WHEN
+            bookDAO.updateReservation("Test Book", "Test Author", true)
+
+            // THEN
+            val res = performQuery("""
+        SELECT reserved FROM book WHERE title = 'Test Book' AND author = 'Test Author'
+    """)
+
+            res.size shouldBe 1
+            res[0]["reserved"] shouldBe true
+        }
+
+
         afterSpec {
             container.stop()
         }
