@@ -91,4 +91,71 @@ class LibraryControllerIT(
 
         verify(exactly = 0) { libraryUseCase.addBook(any()) }
     }
+
+    "rest route to reserve a book successfully" {
+        // Arrange
+        val title = "Le Petit Prince"
+        val author = "Saint-Exupéry"
+        justRun { libraryUseCase.reserveBook(title, author) }
+
+        // Act & Assert
+        mockMvc.post("/books/reserve") {
+            content = """
+            {
+              "title": "$title",
+              "author": "$author"
+            }
+        """.trimIndent()
+            contentType = APPLICATION_JSON
+            accept = APPLICATION_JSON
+        }.andExpect {
+            status { isOk() }  // ou isNoContent() selon ton choix
+        }
+
+        verify(exactly = 1) { libraryUseCase.reserveBook(title, author) }
+    }
+
+    "rest route to reserve a book that is already reserved should return 409" {
+        // Arrange
+        val title = "1984"
+        val author = "George Orwell"
+        every { libraryUseCase.reserveBook(title, author) } throws IllegalStateException("Book already reserved")
+
+        // Act & Assert
+        mockMvc.post("/books/reserve") {
+            content = """
+            {
+              "title": "$title",
+              "author": "$author"
+            }
+        """.trimIndent()
+            contentType = APPLICATION_JSON
+            accept = APPLICATION_JSON
+        }.andExpect {
+            status { isConflict() }
+            content { string("Book already reserved") }
+        }
+    }
+
+    "rest route to reserve a book that does not exist should return 404" {
+        // Arrange
+        val title = "Unknown Book"
+        val author = "Unknown Author"
+        every { libraryUseCase.reserveBook(title, author) } throws IllegalArgumentException("Book not found")
+
+        // Act & Assert
+        mockMvc.post("/books/reserve") {
+            content = """
+            {
+              "title": "$title",
+              "author": "$author"
+            }
+        """.trimIndent()
+            contentType = APPLICATION_JSON
+            accept = APPLICATION_JSON
+        }.andExpect {
+            status { isNotFound() }
+            content { string("Book not found") }
+        }
+    }
 })
